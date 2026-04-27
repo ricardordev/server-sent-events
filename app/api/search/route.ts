@@ -19,7 +19,8 @@ export async function GET(req: Request) {
                 const providers = [
                     { name: 'GOL', delay: 1000, price: 450 },
                     { name: 'LATAM', delay: 2500, price: 380 },
-                    { name: 'AZUL', delay: 10000, price: 510 },
+                    { name: 'AZUL', delay: 5000, price: 510 },
+                    { name: 'PASSAREDO', delay: 2000, price: 360 },
                 ];
 
                 for (const provider of providers) {

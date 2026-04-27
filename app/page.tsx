@@ -65,17 +65,18 @@ export default function Home() {
   const cancelSearch = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
-      setIsSearching(false);
     }
+    setIsSearching(false);
+    setResults([]);
   };
 
   return (
     <main className="max-w-2xl mx-auto p-10 font-sans">
       <h1 className="text-3xl font-bold text-white mb-6">
-        Motor de Busca (Streaming SSE)
+        Streaming SSE
       </h1>
 
-      <form onSubmit={startSearch} className="flex gap-4 mb-8">
+      <div className="flex gap-4 mb-8">
         <input
           type="text"
           value={destination}
@@ -95,14 +96,15 @@ export default function Home() {
           </button>
         ) : (
           <button
-            type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded transition-colors disabled:opacity-50"
+            type="button"
+            onClick={startSearch}
+            className="bg-green-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded transition-colors disabled:opacity-50"
             disabled={!destination.trim()}
           >
             Buscar Voos
           </button>
         )}
-      </form>
+      </div>
 
       {/* Indicador visual de processamento (sem travar a tela) */}
       {isSearching && (
