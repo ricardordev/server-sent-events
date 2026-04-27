@@ -1,65 +1,143 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client';
+
+import { useState, useRef } from 'react';
+
+// Tipagem para os dados recebidos
+interface FlightResult {
+  airline: string;
+  price: number;
+  destination: string;
+  timestamp: string;
+}
 
 export default function Home() {
+  const [destination, setDestination] = useState('');
+  const [results, setResults] = useState<FlightResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Usamos useRef para guardar a instância da conexão e poder cancelá-la a qualquer momento
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  const startSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!destination.trim()) return;
+
+    // Reseta o estado para uma nova busca
+    setResults([]);
+    setIsSearching(true);
+
+    // Se já houver uma conexão aberta (usuário clicou duas vezes), fechamos a anterior
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    // Abre a conexão persistente
+    const eventSource = new EventSource(`/api/search?destination=${encodeURIComponent(destination)}`);
+    eventSourceRef.current = eventSource;
+
+    // Fica "escutando" as mensagens que o back-end está jorrando
+    eventSource.onmessage = (event) => {
+      const parsedData = JSON.parse(event.data);
+
+      // Regra de negócio para encerrar a conexão corretamente
+      if (parsedData.status === 'done') {
+        eventSource.close();
+        setIsSearching(false);
+        return;
+      }
+
+      if (parsedData.status === 'success') {
+        // Adiciona o novo voo à lista preservando os anteriores
+        setResults((prev) => [...prev, parsedData]);
+      }
+    };
+
+    // Tratamento de queda de conexão
+    eventSource.onerror = () => {
+      console.error("Conexão perdida ou encerrada abruptamente.");
+      eventSource.close();
+      setIsSearching(false);
+    };
+  };
+
+  const cancelSearch = () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      setIsSearching(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="max-w-2xl mx-auto p-10 font-sans">
+      <h1 className="text-3xl font-bold text-white mb-6">
+        Motor de Busca (Streaming SSE)
+      </h1>
+
+      <form onSubmit={startSearch} className="flex gap-4 mb-8">
+        <input
+          type="text"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
+          placeholder="Ex: Rio de Janeiro"
+          className="flex-1 border border-stone-500 bg-stone-700 rounded px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={isSearching}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {isSearching ? (
+          <button
+            type="button"
+            onClick={cancelSearch}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2 rounded transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Cancelar Busca
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded transition-colors disabled:opacity-50"
+            disabled={!destination.trim()}
           >
-            Documentation
-          </a>
+            Buscar Voos
+          </button>
+        )}
+      </form>
+
+      {/* Indicador visual de processamento (sem travar a tela) */}
+      {isSearching && (
+        <div className="flex items-center gap-3 mb-6 text-white">
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span className="font-medium">Vasculhando companhias aéreas...</span>
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* Renderização progressiva dos resultados */}
+      <div className="space-y-4">
+        {results.map((flight, index) => (
+          <div
+            key={index}
+            className="border border-stone-800 bg-stone-800 rounded-lg p-5 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <div className="flex justify-between items-center text-black">
+              <div>
+                <p className="text-sm text-gray-300">Destino: {flight.destination}</p>
+                <p className="text-xl font-bold text-gray-200">{flight.airline}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-300">{flight.timestamp}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  R$ {flight.price.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {!isSearching && results.length > 0 && (
+          <p className="text-center text-sm text-gray-500 mt-8">Busca finalizada.</p>
+        )}
+      </div>
+    </main>
   );
 }
