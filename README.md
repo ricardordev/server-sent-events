@@ -12,7 +12,18 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the result.
+Localhost: 
+
+```bash
+http://localhost:3000
+```
+
+Public: 
+
+```bash
+https://server-sent-events.vercel.rdev.eti.br/
+```
+
 
 ```bash
 example by ricardo albrecht

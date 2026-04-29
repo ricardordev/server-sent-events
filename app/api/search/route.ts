@@ -32,6 +32,7 @@ export async function GET(req: Request) {
                         airline: provider.name,
                         price: provider.price,
                         destination: destination,
+                        delay: provider.delay,
                         timestamp: new Date().toLocaleTimeString()
                     });
                 }

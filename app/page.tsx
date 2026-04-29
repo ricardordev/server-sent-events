@@ -9,6 +9,7 @@ interface FlightResult {
   price: number;
   destination: string;
   timestamp: string;
+  delay: number;
 }
 
 export default function Home() {
@@ -73,7 +74,7 @@ export default function Home() {
   return (
     <main className="max-w-2xl mx-auto p-10 font-sans">
       <h1 className="text-3xl font-bold text-white mb-6">
-        Streaming SSE
+        Consultar Passagens (SSE)
       </h1>
 
       <div className="flex gap-4 mb-8">
@@ -127,7 +128,7 @@ export default function Home() {
                 <p className="text-xl font-bold text-gray-200">{flight.airline}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-300">{flight.timestamp}</p>
+                <p className="text-sm text-gray-300">{flight.timestamp} ({flight.delay}ms)</p>
                 <p className="text-2xl font-bold text-green-600">
                   R$ {flight.price.toFixed(2)}
                 </p>
