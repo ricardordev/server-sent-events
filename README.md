@@ -26,5 +26,5 @@ https://server-sent-events.vercel.rdev.eti.br/
 
 
 ```bash
-ricardo albrecht [ricardoalbrecht1@gmail.com](ricardoalbrecht1@gmail.com)
+ricardo albrecht - ricardoalbrecht1@gmail.com
 ```
