@@ -1,6 +1,8 @@
 ## Getting Started
 
-It's just an example of how to use Server-Sent Events (SSE) in Next.js. to check it run the development server:
+It's just an example of how to use **Server-Sent Events (SSE)** in **Next.js**. To check it, run the development server:
+
+## Running
 
 ```bash
 npm run dev
@@ -11,6 +13,8 @@ pnpm dev
 # or
 bun dev
 ```
+
+## Results
 
 Localhost: 
 
